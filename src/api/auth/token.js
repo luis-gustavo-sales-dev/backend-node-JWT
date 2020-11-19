@@ -1,8 +1,9 @@
-const restful = require('node-restful')
-const mongoose = restful.mongoose
 const { tokenExpirationTimeInDays } = require('../../shared/consts')
+const mongoose = require('mongoose')
+const Schema = mongoose.Schema
+const User = require('../user/user')
 
-const tokenSchema = new mongoose.Schema({
+const tokenSchema = Schema({
   token: { type: String, required: true },
   datacriacao: { type: Date, default: new Date() },
   dataexpiracao: { type: Date, default: () => {
@@ -12,7 +13,8 @@ const tokenSchema = new mongoose.Schema({
     }
   },
   active: { type: Boolean, default: true, required: true },
-  deviceId: { type: String, required: true }
+  deviceId: { type: String, required: true },
+  user: { type: Schema.Types.ObjectId, ref: 'User' }
 })
 
-module.exports =  restful.model('Token', tokenSchema)
+module.exports = mongoose.model('Token', tokenSchema)

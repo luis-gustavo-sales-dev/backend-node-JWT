@@ -2,12 +2,13 @@ const _ = require('lodash')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 const User = require('../user/user')
+const Token = require('../auth/token')
 const env = require('../../.env')
 const { tokenExpirationTime, regexs } = require('../../shared/consts')
 const { sendErrorsFromDB, validateToken } = require('../../shared/utils')
 
 
-const login = (req, res, next) => {
+const login = async (req, res, next) => {
   const email = req.body.email || ''
   const password = req.body.password || ''
   const deviceId = req.body.deviceId || req.query.deviceId || req.headers['deviceId'] || ''
@@ -18,72 +19,73 @@ const login = (req, res, next) => {
     })
   }
 
-  User.findOne( { email }, (err, user) => {
+  User.findOne( { email }, async (err, user) => {
     if (err) {
       return sendErrorsFromDB(res, err)
     } else if (user && bcrypt.compareSync(password, user.password)) {
 
       // Procura se há algum token para o dispositivo
-      const deviceTokenFounded = user.tokens.find( (token) => {
-        return validateToken(token, deviceId)
-      })
-
-      // Ainda não há token para o dispositivo enviado
-      if (!deviceTokenFounded) {
+      if(user.tokens) {
+        // let userTokens = await Token.find().where('_id').in(user.tokens).exec()
+        let userTokens = await Token.find({
+          '_id': { $in: user.tokens },
+          'active': true
+        })
         
-        const token = jwt.sign(user.toJSON(), env.authSecret, {
-          expiresIn: tokenExpirationTime
+        const deviceTokenFounded = userTokens.find( (token) => {
+          return validateToken(token, deviceId)
         })
 
-        user.tokens.push({
-          token: token,
-          deviceId: deviceId
-        })
+        if (!deviceTokenFounded) {
+    
+          const newStringToken = jwt.sign(user.toJSON(), env.authSecret, {
+            expiresIn: tokenExpirationTime
+          })
+  
+          const newToken = new Token( {
+            token: newStringToken,
+            deviceId,
+            user: user._id
+          })
+          // Talvez não precise disso se você gerar antes no schema da seguinte forma:
+          // _id: new mongoose.Types.ObjectId(),
+          newToken.save()
+  
+          user.tokens.push(newToken)
+  
+          user.save()
+          const { name, email } = user
+          res.json( {name, email, "token": newToken, deviceId })
+  
+        } else {
+          // Existe token já criado para o dispositivo
+          const { name, email } = user
+          res.json( {name, email, "token": deviceTokenFounded })
+        }
 
-        user.save()
-        const { name, email } = user
-        res.json( {name, email, token, deviceId })
-
-      } else {
-        // Existe token já criado para o dispositivo
-        const { name, email } = user
-        res.json( {name, email, "token": deviceTokenFounded.token, "deviceId": deviceTokenFounded.deviceId })
       }
-
-      // console.log(user)
+      
     } else {
       return res.status(400).send( { errors: ['Usuario ou senha inválido!! '] })
     }
   })
 }
 
-/*const validateToken = (req, res, next) => {
-  // Se o token for valido ele vai retorna valid: true caso contrário será false (pois vai conter um erro (err) ele será true)
-  let data = jwt.verify(token, env.authSecret, (err, decoded) => {
-    // console.log(!err, decoded)
-    return { "valid": !err, decoded }
-  })
-
-  return data;
-}*/
-
-// TODO: PROBLEMA: O token tem que ser armazenado fora do documento do usuário pois dará muito trabalho pegar o token que está dentro do objeto user.
 const findUserByToken = (req, res, next) => {
   const token = req.body.token || ''
   const deviceId = req.body.deviceId || req.query.deviceId || req.headers['deviceId'] || ''
-  // let dataValidation = validateToken(req, res)
-  // console.log(dataValidation)
 
-  User.findOne( {_id: dataValidation.decoded._id }, (err, user) => {
-    if (err) {
-      sendErrorsFromDB(res, err)
-    } else if (user) {
-      user.password = ''
-      return res.status(200).send(user)
+  Token.findOne( { token }, (err, token) => {
+    // console.log(token.user)
+    if (token && token.deviceId === deviceId && token.active) {
+      User.findOne( {_id: token.user}, (err, user) => {
+        const { name, email, role} = user
+        res.json( { name, email, token, role} )
+      })
     } else {
-      return res.status(404).send( {errors: ['Usuário não encontrado!!'] })
+      res.json( { errors: ['Seu token é invalido!']})
     }
-  })
+  })  
 
 }
 

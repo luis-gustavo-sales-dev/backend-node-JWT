@@ -6,11 +6,15 @@ const server = express()
 const allowCors = require('./cors')
 // Converte parâmetros do query da requisição para valor numérico (talvez desnecessário)
 const queryParser = require('express-query-int')
+// Ativação do cron
+const enableCron = require('./cron')
 
 server.use(bodyParser.urlencoded({ extended: true }))
 server.use(bodyParser.json())
 server.use(allowCors)
 server.use(queryParser())
+
+enableCron.removeInvalidTokensPer(1)
 
 server.listen(port, function() {
     console.log(`Servidor de autenticacao está rodando: ${port}.`)
