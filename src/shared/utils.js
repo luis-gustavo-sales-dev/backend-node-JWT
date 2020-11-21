@@ -12,7 +12,11 @@ const sendErrorsFromDB = (res, dbErrors) => {
 }
 
 const validateToken = (token, deviceId) => {
-  return token.deviceId === deviceId && token.active && !isTokenExpired(token)
+  if (token && deviceId) {
+    return token.deviceId === deviceId && token.active && !isTokenExpired(token)
+  } else {
+    return false;
+  }
 }
 
 module.exports = { sendErrorsFromDB, validateToken }

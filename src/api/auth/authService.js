@@ -25,13 +25,14 @@ const login = async (req, res, next) => {
     } else if (user && bcrypt.compareSync(password, user.password)) {
 
       // Procura se há algum token para o dispositivo
+      console.log(user.tokens)
       if(user.tokens) {
         // let userTokens = await Token.find().where('_id').in(user.tokens).exec()
         let userTokens = await Token.find({
           '_id': { $in: user.tokens },
           'active': true
         })
-        
+        // TODO: REMOVA OS TOKENS QUE FORAM APARADOS DO CAMPOS TOKENS DO USUÁRIO AQUI PARA EVITAR RETRABALHO
         const deviceTokenFounded = userTokens.find( (token) => {
           return validateToken(token, deviceId)
         })
@@ -75,12 +76,12 @@ const findUserByToken = (req, res, next) => {
   const token = req.body.token || ''
   const deviceId = req.body.deviceId || req.query.deviceId || req.headers['deviceId'] || ''
 
-  Token.findOne( { token }, (err, token) => {
+  Token.findOne( { token }, (err, t) => {
     // console.log(token.user)
-    if (token && token.deviceId === deviceId && token.active) {
-      User.findOne( {_id: token.user}, (err, user) => {
+    if (validateToken(t, deviceId)) {
+      User.findOne( {_id: t.user}, (err, user) => {
         const { name, email, role} = user
-        res.json( { name, email, token, role} )
+        res.json( { name, email, t, role} )
       })
     } else {
       res.json( { errors: ['Seu token é invalido!']})

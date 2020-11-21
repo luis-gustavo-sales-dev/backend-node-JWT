@@ -1,5 +1,4 @@
 const express = require('express')
-const user = require('../../api/user/user')
 const auth = require('../../config/auth')
 
 // Rotas de usuários

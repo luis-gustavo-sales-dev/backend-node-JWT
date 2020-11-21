@@ -14,6 +14,7 @@ server.use(bodyParser.json())
 server.use(allowCors)
 server.use(queryParser())
 
+// Ativação do cron
 enableCron.removeInvalidTokensPer(1)
 
 server.listen(port, function() {

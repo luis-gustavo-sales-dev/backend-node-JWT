@@ -15,4 +15,10 @@ const removeInvalidTokensPer = (intervalToRemove) => {
   })
 }
 
+const removeAlreadyDeletedTokenFromTokensInUsers = (intervalToRemove) => {
+  cron.schedule('* * * * *', () => {
+    
+  })
+}
+
 module.exports = { removeInvalidTokensPer }
