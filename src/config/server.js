@@ -8,6 +8,7 @@ const allowCors = require('./cors')
 const queryParser = require('express-query-int')
 // Ativação do cron
 const enableCron = require('./cron')
+const buitinUsers = require('./builtins/buitinUsers')
 
 server.use(bodyParser.urlencoded({ extended: true }))
 server.use(bodyParser.json())
@@ -16,6 +17,9 @@ server.use(queryParser())
 
 // Ativação do cron
 enableCron.removeInvalidTokensPer(1)
+// Criar usuário administrador
+buitinUsers.createAdmin()
+
 
 server.listen(port, function() {
     console.log(`Servidor de autenticacao está rodando: ${port}.`)

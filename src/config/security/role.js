@@ -24,10 +24,10 @@ const superUserPermission = (req, res, next) => {
   // console.log(decoded)
 
   User.findOne({ _id: decoded._id }, (err, user) => {
-    if (user.role === 'ADMINISTRADOR' || user.role === 'SUPER') {
+    if (user.role === 'SUPER') {
       next()
     } else {
-      res.status(403).json({ errors: ['Você precisa ser administrador ou super para fazer isso']})
+      res.status(403).json({ errors: ['Você precisa ser super para fazer isso']})
     }
   })
   

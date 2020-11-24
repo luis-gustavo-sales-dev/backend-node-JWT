@@ -111,7 +111,8 @@ const signup = (req, res, next) => {
           return sendErrorsFromDB(res, err)
         } else {
           // Se não deu erro ele vai logar o usuário logo
-          login(req, res, next)
+          // login(req, res, next)
+          res.json( { messages: ['Cadastro realizado. Confirme seu email para ativar seu usuário.']})
         }
       })
     }
