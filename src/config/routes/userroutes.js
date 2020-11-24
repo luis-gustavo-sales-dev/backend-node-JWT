@@ -1,5 +1,5 @@
 const express = require('express')
-const auth = require('../../config/auth')
+const auth = require('../security/auth')
 
 // Rotas de usuários
 module.exports = (server) => {

@@ -5,7 +5,7 @@ const User = require('../user/user')
 const TokenBlackList = require('./tokenBlackList')
 const env = require('../../.env')
 const { tokenExpirationTime, regexs } = require('../../shared/consts')
-const { sendErrorsFromDB, validateTokenFromDevice } = require('../../shared/utils')
+const { sendErrorsFromDB } = require('../../shared/utils')
 
 
 const login = async (req, res, next) => {
@@ -73,6 +73,7 @@ const signup = (req, res, next) => {
   const email = req.body.email || ''
   const password = req.body.password || ''
   const confirmPassword = req.body.confirm_password || ''
+  const role = req.body.role || ''
 
   // Valida se o email é válido
   if (!email.match(regexs.emailRegex)) {
@@ -103,7 +104,7 @@ const signup = (req, res, next) => {
       return res.status(400).send({errors: ['Usuário já cadastrado']})
     } else {
       // Aqui eu cadastro o usuário
-      const newUser = new User( {name, email, password: passwordHash, role: 'USUARIO'})
+      const newUser = new User( {name, email, password: passwordHash, role: role})
       newUser.save( err => {
         if (err) {
           // Aqui deu erro na hora de salvar

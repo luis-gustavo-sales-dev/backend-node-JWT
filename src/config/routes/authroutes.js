@@ -1,5 +1,7 @@
 const express = require('express')
-const auth = require('../auth')
+const auth = require('../security/auth')
+const { adminUserPermission } = require('../security/role')
+
 
 module.exports = (server) => {
   
@@ -14,6 +16,5 @@ module.exports = (server) => {
 
   // TODO: ESSE DAQUI PRECISA PASSAR PELO MIDDLEWARE AUTH e
   // OUTRO DE PERMISSAO DE "SUPER" OU "ADMIN"
-  // DEIXE SEM SOMENTE PARA FINS DE TESTES
-  authRoutes.post('/blocktoken',auth, AuthService.tokenToBlackList)
+  authRoutes.post('/blocktoken', auth, adminUserPermission, AuthService.tokenToBlackList)
 }
