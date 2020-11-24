@@ -1,6 +1,7 @@
 const _ = require('lodash')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
+const crypto = require('crypto')
 const User = require('../user/user')
 const Token = require('../auth/token')
 const env = require('../../.env')
@@ -37,11 +38,23 @@ const login = async (req, res, next) => {
           return validateToken(token, deviceId)
         })
 
+        // Precisa trocar alguns caracteres pois não são aceitos no header
+        const fromBase64 = base64 =>
+          base64
+            .replace(/=/g, '')
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_');
+
         if (!deviceTokenFounded) {
-    
-          const newStringToken = jwt.sign(user.toJSON(), env.authSecret, {
-            expiresIn: tokenExpirationTime
+          const newStringToken = await new Promise((resolve, reject) => {
+            crypto.randomBytes(21, (error, data) => {
+              // console.log(data.toString())
+              error ? reject(error) : resolve(fromBase64(data.toString('base64')))
+            })
           })
+          /*const newStringToken = jwt.sign(user.toJSON(), env.authSecret, {
+            expiresIn: tokenExpirationTime
+          })*/
   
           const newToken = new Token( {
             token: newStringToken,
