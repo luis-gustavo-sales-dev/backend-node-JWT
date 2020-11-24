@@ -1,5 +1,5 @@
 const express = require('express')
-// const auth = require('./auth')
+const auth = require('../auth')
 
 module.exports = (server) => {
   
@@ -10,5 +10,10 @@ module.exports = (server) => {
   authRoutes.post('/login', AuthService.login)
   authRoutes.post('/signup', AuthService.signup)
   // openApi.post('/validatetoken', AuthService.validateToken)
-  authRoutes.post('/validatetoken', AuthService.findUserByToken)
+  authRoutes.post('/validatetoken', AuthService.validateToken)
+
+  // TODO: ESSE DAQUI PRECISA PASSAR PELO MIDDLEWARE AUTH e
+  // OUTRO DE PERMISSAO DE "SUPER" OU "ADMIN"
+  // DEIXE SEM SOMENTE PARA FINS DE TESTES
+  authRoutes.post('/blocktoken',auth, AuthService.tokenToBlackList)
 }

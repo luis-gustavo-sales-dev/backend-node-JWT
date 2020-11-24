@@ -1,12 +1,11 @@
 const _ = require('lodash')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
-const crypto = require('crypto')
 const User = require('../user/user')
-const Token = require('../auth/token')
+const TokenBlackList = require('./tokenBlackList')
 const env = require('../../.env')
 const { tokenExpirationTime, regexs } = require('../../shared/consts')
-const { sendErrorsFromDB, validateToken } = require('../../shared/utils')
+const { sendErrorsFromDB, validateTokenFromDevice } = require('../../shared/utils')
 
 
 const login = async (req, res, next) => {
@@ -25,81 +24,47 @@ const login = async (req, res, next) => {
       return sendErrorsFromDB(res, err)
     } else if (user && bcrypt.compareSync(password, user.password)) {
 
-      // Procura se há algum token para o dispositivo
-      console.log(user.tokens)
-      if(user.tokens) {
-        // let userTokens = await Token.find().where('_id').in(user.tokens).exec()
-        let userTokens = await Token.find({
-          '_id': { $in: user.tokens },
-          'active': true
-        })
-        // TODO: REMOVA OS TOKENS QUE FORAM APARADOS DO CAMPOS TOKENS DO USUÁRIO AQUI PARA EVITAR RETRABALHO
-        const deviceTokenFounded = userTokens.find( (token) => {
-          return validateToken(token, deviceId)
-        })
+      // user.deviceId = deviceId
+      let userObject = user.toJSON()
+      userObject.deviceId = deviceId
+      delete userObject.password
+      const token = jwt.sign(userObject, env.authSecret, {
+        expiresIn: tokenExpirationTime
+      })
 
-        // Precisa trocar alguns caracteres pois não são aceitos no header
-        const fromBase64 = base64 =>
-          base64
-            .replace(/=/g, '')
-            .replace(/\+/g, '-')
-            .replace(/\//g, '_');
+      // Não precisa disso pois já vem dentro do token
+      // const { name, email } = user
+      // O cliente deve decodificar o token
+      res.json({token})
 
-        if (!deviceTokenFounded) {
-          const newStringToken = await new Promise((resolve, reject) => {
-            crypto.randomBytes(21, (error, data) => {
-              // console.log(data.toString())
-              error ? reject(error) : resolve(fromBase64(data.toString('base64')))
-            })
-          })
-          /*const newStringToken = jwt.sign(user.toJSON(), env.authSecret, {
-            expiresIn: tokenExpirationTime
-          })*/
-  
-          const newToken = new Token( {
-            token: newStringToken,
-            deviceId,
-            user: user._id
-          })
-          // Talvez não precise disso se você gerar antes no schema da seguinte forma:
-          // _id: new mongoose.Types.ObjectId(),
-          newToken.save()
-  
-          user.tokens.push(newToken)
-  
-          user.save()
-          const { name, email } = user
-          res.json( {name, email, "token": newToken, deviceId })
-  
-        } else {
-          // Existe token já criado para o dispositivo
-          const { name, email } = user
-          res.json( {name, email, "token": deviceTokenFounded })
-        }
-
-      }
-      
     } else {
       return res.status(400).send( { errors: ['Usuario ou senha inválido!! '] })
     }
   })
 }
 
-const findUserByToken = (req, res, next) => {
-  const token = req.body.token || ''
-  const deviceId = req.body.deviceId || req.query.deviceId || req.headers['deviceId'] || ''
+const tokenToBlackList = (req, res, next) => {
+  let blockedToken = req.body.blockedtoken || ''
 
-  Token.findOne( { token }, (err, t) => {
-    // console.log(token.user)
-    if (validateToken(t, deviceId)) {
-      User.findOne( {_id: t.user}, (err, user) => {
-        const { name, email, role} = user
-        res.json( { name, email, t, role} )
-      })
-    } else {
-      res.json( { errors: ['Seu token é invalido!']})
-    }
-  })  
+  // Adiciona o token na lista negra de tokens
+  // console.log("BlockedToken: " + blockedToken)
+  if (blockedToken) {
+    let token = new TokenBlackList({
+      token: blockedToken
+    })
+    token.save( (err) => {
+      res.status(204).send({ 'messages': ['Token bloqueado!!']})
+    })
+  }
+}
+
+// Serve somente para retornar true ou false para mostrar se o token é válido ou não
+const validateToken = (req, res, next) => {
+  const token = req.body.token || ''
+
+  jwt.verify(token, env.authSecret, function (err, decoded) {
+      return res.status(200).send({ valid: !err })
+  })
 
 }
 
@@ -152,4 +117,4 @@ const signup = (req, res, next) => {
   })
 }
 
-module.exports = { login, signup, findUserByToken }
+module.exports = { login, signup, validateToken, tokenToBlackList }

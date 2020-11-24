@@ -11,12 +11,12 @@ const sendErrorsFromDB = (res, dbErrors) => {
   return res.status(400).json({ errors })
 }
 
-const validateToken = (token, deviceId) => {
+const validateTokenFromDevice = (token, deviceId) => {
   if (token && deviceId) {
-    return token.deviceId === deviceId && token.active && !isTokenExpired(token)
+    return token.deviceId === deviceId
   } else {
     return false;
   }
 }
 
-module.exports = { sendErrorsFromDB, validateToken }
+module.exports = { sendErrorsFromDB, validateTokenFromDevice }

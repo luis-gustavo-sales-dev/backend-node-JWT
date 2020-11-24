@@ -1,6 +1,5 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
-const Token = require('../auth/token')
 
 const userSchema = Schema({
   name: { type: String, minlength: 8, maxlength: 50, required: true },
@@ -8,9 +7,8 @@ const userSchema = Schema({
   password: { type: String, min: 6, max: 50, required: true },
   role: { type: String, required: true, uppercase: true, 
     enum: [
-      'USUARIO', 'ADMINISTRADOR'
-  ]},
-  tokens: [{ type: Schema.Types.ObjectId, ref: 'Token'}]
+      'USUARIO', 'ADMINISTRADOR', 'SUPER'
+  ]}
 })
 
 module.exports = mongoose.model('User', userSchema)
