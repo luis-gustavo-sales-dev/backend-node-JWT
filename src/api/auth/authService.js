@@ -24,6 +24,8 @@ const login = async (req, res, next) => {
       return sendErrorsFromDB(res, err)
     } else if (user && bcrypt.compareSync(password, user.password)) {
 
+      if (!user.active) res.status(403).send( { errors: ['Seu usuário está inativo'] })
+
       // user.deviceId = deviceId
       let userObject = user.toJSON()
       userObject.deviceId = deviceId
