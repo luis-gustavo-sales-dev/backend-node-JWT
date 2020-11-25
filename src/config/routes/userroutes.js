@@ -1,6 +1,8 @@
 const express = require('express')
 const auth = require('../security/auth')
 
+const UserService = require('../../api/user/userService')
+
 // Rotas de usuários
 module.exports = (server) => {
   const userRoutes = express.Router()
@@ -9,7 +11,5 @@ module.exports = (server) => {
   // Rotas precisam passar pelo middlware de autenticacao
   userRoutes.use(auth)
 
-  userRoutes.get('/', (req, res) => {
-    res.send('Usuários ...')
-  })
+  userRoutes.get('/', UserService.getLoggedUserInfoByToken)
 }
