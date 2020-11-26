@@ -1,5 +1,5 @@
 const User = require('./user')
-const { sendErrorsFromDB } = require('../../shared/utils')
+const { sendErrorsFromDB, removerFieldFromUser } = require('../../shared/utils')
 const jwt = require('jsonwebtoken')
 
 const deleteUsuario = (req, res, next) => {
@@ -7,7 +7,7 @@ const deleteUsuario = (req, res, next) => {
   // Só que pode apagar é o próprio usuário ou um admin
 }
 
-// Tem que chamar o midleware auth antes
+// Tem que chamar o midleware auth antes para verificar se o token é valido
 const getLoggedUserInfoByToken = (req, res, next) => {
   const token = req.headers.authorization || ''
   if (token) {
@@ -16,9 +16,12 @@ const getLoggedUserInfoByToken = (req, res, next) => {
       if (err) {
         return sendErrorsFromDB(res, err)
       } else if (user) {
-        res.json(user)
+        user = user.toJSON()
+        // Não precisa enviar senha nem o campo __v
+        user = removerFieldFromUser(user, ['password', '__v'])
+        return res.status(200).json(user)
       } else {
-        res.status(404).send( { error: 'Usuário não encontrado!!' })
+        return res.status(404).send( { error: 'Usuário não encontrado!!' })
       }
     })
   }

@@ -32,4 +32,15 @@ const verifyToken = (token, res, next) => {
     })
 }
 
-module.exports = { sendErrorsFromDB, verifyToken }
+// Remove campos dos usuário
+const removerFieldFromUser = (user, fieldsToRemove) => {
+  let userFields = Object.keys(user)
+  _.forIn(userFields, (field) => {
+    if (fieldsToRemove.includes(field)) {
+      delete user[`${field}`]
+    }
+  })
+  return user
+}
+
+module.exports = { sendErrorsFromDB, verifyToken, removerFieldFromUser }
