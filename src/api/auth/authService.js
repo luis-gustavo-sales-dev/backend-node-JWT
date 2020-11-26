@@ -77,7 +77,6 @@ const signup = (req, res, next) => {
   const email = req.body.email || ''
   const password = req.body.password || ''
   const confirmPassword = req.body.confirm_password || ''
-  const role = req.body.role || ''
 
   // Valida se o email é válido
   if (!email.match(regexs.emailRegex)) {
@@ -108,7 +107,7 @@ const signup = (req, res, next) => {
       return res.status(400).send({errors: ['Usuário já cadastrado']})
     } else {
       // Aqui eu cadastro o usuário
-      const newUser = new User( {name, email, password: passwordHash, role: role})
+      const newUser = new User( {name, email, password: passwordHash, role: 'USUARIO'})
       newUser.save( err => {
         if (err) {
           // Aqui deu erro na hora de salvar
@@ -116,7 +115,7 @@ const signup = (req, res, next) => {
         } else {
           // Se não deu erro ele vai logar o usuário logo
           // login(req, res, next)
-          res.json( { messages: ['Cadastro realizado. Confirme seu email para ativar seu usuário.']})
+          res.status(201).send( { messages: ['Cadastro realizado. Confirme seu email para ativar seu usuário.']})
         }
       })
     }

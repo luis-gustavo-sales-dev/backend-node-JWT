@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken')
 const env = require('../.env')
 const TokenBlackList = require('../api/auth/tokenBlackList')
+const _ = require('lodash')
 
 
 // Exportadas

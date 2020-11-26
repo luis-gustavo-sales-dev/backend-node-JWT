@@ -19,6 +19,7 @@ server.use(queryParser())
 enableCron.removeInvalidTokensPer(1)
 // Criar usuário administrador
 buitinUsers.createAdmin()
+buitinUsers.createUsers(3)
 
 
 server.listen(port, function() {
