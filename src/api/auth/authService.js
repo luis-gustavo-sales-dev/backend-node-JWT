@@ -13,6 +13,8 @@ const login = async (req, res, next) => {
   const password = req.body.password || ''
   const deviceId = req.body.deviceId || req.query.deviceId || req.headers['deviceId'] || ''
 
+  console.log(password)
+
   if (!deviceId || deviceId == '') {
     return res.status(403).send( { 
       errors: ['Preciso do id do dispositivo para gerar o token']
@@ -20,6 +22,7 @@ const login = async (req, res, next) => {
   }
 
   User.findOne( { email }, async (err, user) => {
+    console.log("user" + user.password)
     if (err) {
       return sendErrorsFromDB(res, err)
     } else if (user && bcrypt.compareSync(password, user.password)) {
